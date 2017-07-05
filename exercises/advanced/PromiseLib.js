@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 
 /**
  * Return a function that wraps `nodeStyleFn`. When the returned function is invoked,
- * it will return a promise which will be resolved or rejected, depending on 
+ * it will return a promise which will be resolved or rejected, depending on
  * the execution of the now-wrapped `nodeStyleFn`
  *
  * In other words:
@@ -16,6 +16,20 @@ var Promise = require('bluebird');
 
 var promisify = function(nodeStyleFn) {
  // TODO
+  return function() {
+    var argsForNodeStyleFn = [].slice.call(arguments);
+
+    return new Promise(function(resolve, reject) {
+      var nodeStyleCallback = function(err, results) {
+        if (err) { return reject(err); }
+        resolve(results);
+      };
+      //node style fn's expect cb as its last arg
+      argsForNodeStyleFn.push(nodeStyleCallback);
+
+      nodeStyleFn.apply(null, argsForNodeStyleFn);
+    });
+  };
 };
 
 
@@ -32,6 +46,22 @@ var promisify = function(nodeStyleFn) {
 
 var all = function(arrayOfPromises) {
   // TODO
+  var resolvedValues = [];
+  var promisesLeftToResolve = arrayOfPromises.length;
+
+  return new Promise(function(resolve, reject) {
+    arrayOfPromises.forEach(function(promise, i) {
+      promise
+        .then(function(value) {
+          resolvedValues[i] = value;
+
+          if (!--promisesLeftToResolve) {
+            resolve(resolvedValues);
+          }
+        })
+        .catch(reject);
+    })
+  })
 };
 
 
