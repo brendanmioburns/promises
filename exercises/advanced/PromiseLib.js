@@ -73,6 +73,25 @@ var all = function(arrayOfPromises) {
 
 var race = function(arrayOfPromises) {
   // TODO
+  return new Promise(function(resolve, reject) {
+    var resolved = false;
+
+    arrayOfPromises.forEach(function(promise) {
+      promise
+        .then(function(value) {
+          if (!resolved) {
+            resolved = true;
+            resolve(value);
+          }
+        })
+        .catch(function(err) {
+          if (!resolved) {
+            resolved = true;
+            reject(err);
+          }
+        })
+    })
+  })
 };
 
 // Export these functions so we can unit test them
